@@ -54,7 +54,7 @@ async function runAnalysis(chatId: number, address: string) {
       getTokenOverview(address),
       getTokenSecurity(address),
       getTokenHolders(address, 20),
-      getTokenTrades(address, 100),
+      getTokenTrades(address, 50),
       getOHLCV(address),
       getExitLiquidity(address),
       getTokenMarkets(address),
@@ -70,7 +70,7 @@ async function runAnalysis(chatId: number, address: string) {
     const tierEmoji = r.tier === 'green' ? '🟢' : r.tier === 'yellow' ? '🟡' : '🔴'
     const sellPct = r.buyVol1h + r.sellVol1h > 0
       ? ((r.sellVol1h / (r.buyVol1h + r.sellVol1h)) * 100).toFixed(0)
-      : '50'
+      : '0'
 
     // Whale PnL line
     const pnlLine = r.holdersInProfit > 0
@@ -110,7 +110,7 @@ async function runAnalysis(chatId: number, address: string) {
         `${i + 1}\\. ${esc(step.tranche)} — *${esc(step.size)}*\n   _${esc(step.timing)}_`
       ),
       ``,
-      `🔗 [Full analysis](${esc(`${BASE_URL}/?a=${address}`)}) · [Birdeye](${esc(`https://birdeye.so/token/${address}`)})`,
+      `🔗 [Full analysis](${esc(`${BASE_URL}/?a=${address}`)}) · [Birdeye](${esc(`https://birdeye.so/token/${address}?chain=solana`)})`,
       ``,
       `_\\#BirdeyeAPI \\#Solana_`,
     ].filter(Boolean).join('\n')

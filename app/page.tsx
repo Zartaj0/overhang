@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { LineChart, Line, ResponsiveContainer, Tooltip, YAxis } from 'recharts'
 import type { OverhangResult, HolderWithPnL } from '@/lib/score'
 import { simulatePosition, fmtUSD, fmtPct } from '@/lib/score'
@@ -373,7 +373,7 @@ function SharePanel({ result, address }: { result: OverhangResult; address: stri
       : `✅ No whale exits in last hour`,
     ``,
     `Know your exit before you ape 👇`,
-    `[link] #Solana`,
+    `${window.location.origin}/?a=${address} #Solana`,
   ].join('\n')
   const shareOnX = () => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank')
   const copyText = async () => {
@@ -418,6 +418,14 @@ export default function Home() {
   const [result, setResult] = useState<OverhangResult | null>(null)
   const [currentAddress, setCurrentAddress] = useState('')
   const resultRef = useRef<HTMLDivElement>(null)
+
+  // Auto-analyze from ?a= URL param on page load
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const a = params.get('a')
+    if (a) { setAddress(a); analyze(a) }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const analyze = useCallback(async (addr: string) => {
     const trimmed = addr.trim()
@@ -541,6 +549,12 @@ export default function Home() {
         {/* ─── RESULTS ─────────────────────────────────────────────────────── */}
         {result && !loading && (
           <div ref={resultRef} className="space-y-4">
+            {/* Stablecoin / non-meme token warning */}
+            {result.token.price >= 0.97 && result.token.price <= 1.03 && (
+              <div className="p-3 rounded-xl bg-yellow-950/40 border border-yellow-700/40 text-yellow-400 text-xs">
+                ⚠️ <strong>Stablecoin detected.</strong> Overhang is designed for volatile Solana tokens. High holder concentration and sell pressure on stablecoins like USDC reflect exchange custodians and normal redemptions — not dump risk.
+              </div>
+            )}
 
             {/* ── Hero card ────────────────────────────────────────────────── */}
             <div className={clsx('rounded-2xl border p-6', tc.bg, tc.border)} style={{ boxShadow: tc.glow }}>
