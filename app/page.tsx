@@ -172,7 +172,7 @@ function HolderPnLCards({ holderPnLs, holdersInProfit, totalHolderOverhang }: {
             </div>
             <div className="mt-2">
               <a
-                href={`https://birdeye.so/profile/${h.address}`}
+                href={`https://birdeye.so/wallet/${h.address}?chain=solana`}
                 target="_blank" rel="noopener"
                 className="text-xs text-gray-700 hover:text-blue-400 font-mono truncate block transition-colors"
                 title={h.address}
@@ -562,7 +562,7 @@ export default function Home() {
                       {result.exitLiquiditySource === 'birdeye_api' ? '🔵 Birdeye Exit API' : '📐 AMM Computed'}
                     </span>
                   </div>
-                  <a href={`https://birdeye.so/token/${currentAddress}`} target="_blank" rel="noopener"
+                  <a href={`https://birdeye.so/token/${currentAddress}?chain=solana`} target="_blank" rel="noopener"
                     className="text-xs text-blue-500 hover:text-blue-400 font-mono">
                     View on Birdeye ↗
                   </a>
