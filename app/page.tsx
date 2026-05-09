@@ -6,13 +6,80 @@ import type { OverhangResult, HolderWithPnL } from '@/lib/score'
 import { simulatePosition, fmtUSD, fmtPct } from '@/lib/score'
 import clsx from 'clsx'
 
-// ─── Demo tokens ──────────────────────────────────────────────────────────────
-const DEMO_TOKENS = [
-  { label: 'BONK',   address: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263' },
-  { label: 'WIF',    address: 'EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm' },
-  { label: 'POPCAT', address: '7GCihgDB8fe6KNjn2MYtkzZcRjQy3t9GHdC8uHYmW2hr' },
-  { label: 'BOME',   address: 'ukHH6c7mMyiWCf1b9pnWe25TSpkDDt3H5pQZgZ74J82' },
-]
+// ─── Token search types ───────────────────────────────────────────────────────
+interface TokenEntry {
+  address: string
+  symbol: string
+  name: string
+  price: number
+  logoURI?: string
+  v24hUSD?: number
+}
+
+// ─── Token Search Dropdown ────────────────────────────────────────────────────
+function TokenSearch({ onSelect }: { onSelect: (address: string) => void }) {
+  const [query, setQuery] = useState('')
+  const [tokens, setTokens] = useState<TokenEntry[]>([])
+  const [open, setOpen] = useState(false)
+  const [loaded, setLoaded] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
+
+  async function load() {
+    if (loaded) return
+    try {
+      const res = await fetch('/api/tokens')
+      const data = await res.json()
+      setTokens(data.tokens ?? [])
+      setLoaded(true)
+    } catch { /* silent */ }
+  }
+
+  const filtered = query.trim().length > 0
+    ? tokens.filter(t =>
+        t.symbol?.toLowerCase().includes(query.toLowerCase()) ||
+        t.name?.toLowerCase().includes(query.toLowerCase())
+      ).slice(0, 8)
+    : tokens.slice(0, 8)
+
+  return (
+    <div ref={ref} className="relative">
+      <input
+        value={query}
+        onChange={e => setQuery(e.target.value)}
+        onFocus={() => { setOpen(true); load() }}
+        placeholder="Search by name or symbol…"
+        className="w-full bg-gray-900/80 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition-all"
+      />
+      {open && filtered.length > 0 && (
+        <div className="absolute z-50 top-full mt-1 w-full bg-gray-900 border border-gray-700 rounded-xl shadow-2xl overflow-hidden">
+          {filtered.map(t => (
+            <button key={t.address} onMouseDown={() => { onSelect(t.address); setQuery(''); setOpen(false) }}
+              className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-800 transition-colors text-left">
+              {t.logoURI
+                ? <img src={t.logoURI} alt="" className="w-6 h-6 rounded-full flex-shrink-0 bg-gray-800" onError={e => { (e.target as HTMLImageElement).style.display='none' }} />
+                : <div className="w-6 h-6 rounded-full bg-gray-700 flex-shrink-0" />}
+              <div className="flex-1 min-w-0">
+                <span className="text-sm font-semibold text-white">${t.symbol}</span>
+                <span className="text-xs text-gray-500 ml-2 truncate">{t.name}</span>
+              </div>
+              <span className="text-xs font-mono text-gray-400 flex-shrink-0">
+                ${t.price < 0.01 ? t.price.toExponential(2) : t.price.toFixed(4)}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 // ─── Color config ─────────────────────────────────────────────────────────────
 const TC = {
@@ -499,7 +566,7 @@ export default function Home() {
         <form onSubmit={handleSubmit} className="space-y-3 mb-8">
           <div className="flex gap-2">
             <input value={address} onChange={e => setAddress(e.target.value)}
-              placeholder="Paste Solana token mint address…" spellCheck={false}
+              placeholder="Paste token address…" spellCheck={false}
               className="flex-1 bg-gray-900/80 border border-gray-700 rounded-xl px-4 py-3.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 font-mono transition-all"
             />
             <button type="submit" disabled={loading || !address.trim()}
@@ -515,16 +582,7 @@ export default function Home() {
               ) : 'Analyze →'}
             </button>
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs text-gray-600">Try:</span>
-            {DEMO_TOKENS.map(t => (
-              <button key={t.address} type="button"
-                onClick={() => { setAddress(t.address); analyze(t.address) }}
-                className="text-xs px-3 py-1.5 rounded-full bg-gray-800/80 hover:bg-gray-700 text-gray-400 hover:text-gray-200 transition-colors border border-gray-700/50">
-                ${t.label}
-              </button>
-            ))}
-          </div>
+          <TokenSearch onSelect={addr => { setAddress(addr); analyze(addr) }} />
         </form>
 
         {/* Error */}
