@@ -354,7 +354,7 @@ function WhaleAlerts({ whaleTxs }: { whaleTxs: { side: 'buy' | 'sell'; volumeUsd
 function SharePanel({ result, address }: { result: OverhangResult; address: string }) {
   const [copied, setCopied] = useState(false)
   const sellPct = result.buyVol1h + result.sellVol1h > 0
-    ? (result.sellVol1h / (result.buyVol1h + result.sellVol1h) * 100).toFixed(0) : '50'
+    ? (result.sellVol1h / (result.buyVol1h + result.sellVol1h) * 100).toFixed(0) : '0'
   const tierEmoji = result.tier === 'green' ? '🟢' : result.tier === 'yellow' ? '🟡' : '🔴'
   const profitLine = result.holdersInProfit > 0
     ? `⚠️ ${result.holdersInProfit} top whale(s) sitting on $${fmtUSD(result.totalHolderOverhang)} unrealized gains`
@@ -660,7 +660,7 @@ export default function Home() {
                   </div>
                   <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
                     <div className="h-full bg-green-500 rounded-full transition-all duration-700"
-                      style={{ width: `${result.buyVol1h + result.sellVol1h > 0 ? (result.buyVol1h / (result.buyVol1h + result.sellVol1h)) * 100 : 50}%` }}
+                      style={{ width: `${result.buyVol1h + result.sellVol1h > 0 ? (result.buyVol1h / (result.buyVol1h + result.sellVol1h)) * 100 : 0}%` }}
                     />
                   </div>
                   <div className="flex justify-between text-xs text-gray-600 mt-1">

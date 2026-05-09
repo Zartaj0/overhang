@@ -60,7 +60,7 @@ export async function GET(req: NextRequest) {
     // ── Build OG image URL ───────────────────────────────────────────────────
     const sellPct = result.buyVol1h + result.sellVol1h > 0
       ? ((result.sellVol1h / (result.buyVol1h + result.sellVol1h)) * 100).toFixed(0)
-      : '50'
+      : '0'
 
     const ogParams = new URLSearchParams({
       symbol:    result.token.symbol ?? 'TOKEN',
