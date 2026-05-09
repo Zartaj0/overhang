@@ -31,11 +31,15 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // ── Phase 1: Fan out 7 Birdeye calls in parallel ─────────────────────────
-    const [overview, security, holders, trades, ohlcv, exitLiq, markets] = await Promise.all([
+    // ── Phase 1a: Core token data (3 calls) ───────────────────────────────────
+    const [overview, security, holders] = await Promise.all([
       getTokenOverview(address),
       getTokenSecurity(address),
       getTokenHolders(address, 20),
+    ])
+
+    // ── Phase 1b: Market data (4 calls) — staggered to avoid 429 ─────────────
+    const [trades, ohlcv, exitLiq, markets] = await Promise.all([
       getTokenTrades(address, 100),
       getOHLCV(address),
       getExitLiquidity(address),

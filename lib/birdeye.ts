@@ -9,11 +9,15 @@ function headers() {
   }
 }
 
-async function get<T>(path: string): Promise<T> {
+async function get<T>(path: string, retries = 2): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     headers: headers(),
     next: { revalidate: 30 },
   })
+  if (res.status === 429 && retries > 0) {
+    await new Promise(r => setTimeout(r, 1200))
+    return get<T>(path, retries - 1)
+  }
   if (!res.ok) {
     throw new Error(`Birdeye ${path} → ${res.status} ${res.statusText}`)
   }
@@ -58,7 +62,11 @@ export interface TokenSecurity {
 }
 
 export async function getTokenSecurity(address: string): Promise<TokenSecurity> {
-  return get<TokenSecurity>(`/defi/token_security?address=${address}`)
+  try {
+    return await get<TokenSecurity>(`/defi/token_security?address=${address}`)
+  } catch {
+    return {}
+  }
 }
 
 // ─── 3. Token Holders ────────────────────────────────────────────────────────
@@ -100,7 +108,11 @@ export interface ExitLiquidity {
 }
 
 export async function getExitLiquidity(address: string): Promise<ExitLiquidity> {
-  return get<ExitLiquidity>(`/defi/v3/token/exit-liquidity?address=${address}`)
+  try {
+    return await get<ExitLiquidity>(`/defi/v3/token/exit-liquidity?address=${address}`)
+  } catch {
+    return { address }
+  }
 }
 
 // ─── 5. Recent Trades ────────────────────────────────────────────────────────
@@ -119,9 +131,13 @@ export interface TradeList {
 }
 
 export async function getTokenTrades(address: string, limit = 100): Promise<TradeList> {
-  return get<TradeList>(
-    `/defi/txs/token?address=${address}&tx_type=all&limit=${limit}&sort_type=desc`
-  )
+  try {
+    return await get<TradeList>(
+      `/defi/txs/token?address=${address}&limit=${limit}&sort_type=desc`
+    )
+  } catch {
+    return { items: [], total: 0 }
+  }
 }
 
 // ─── 6. OHLCV (15m candles, last 4h) ─────────────────────────────────────────
@@ -137,9 +153,13 @@ export interface OHLCVData {
 export async function getOHLCV(address: string): Promise<OHLCVData> {
   const now = Math.floor(Date.now() / 1000)
   const from = now - 4 * 60 * 60
-  return get<OHLCVData>(
-    `/defi/v3/ohlcv?address=${address}&type=15m&time_from=${from}&time_to=${now}`
-  )
+  try {
+    return await get<OHLCVData>(
+      `/defi/v3/ohlcv?address=${address}&type=15m&time_from=${from}&time_to=${now}`
+    )
+  } catch {
+    return { items: [] }
+  }
 }
 
 // ─── 7. Wallet PnL per token ─────────────────────────────────────────────────
@@ -199,7 +219,11 @@ export interface TokenMarketsResponse {
 }
 
 export async function getTokenMarkets(address: string): Promise<TokenMarketsResponse> {
-  return get<TokenMarketsResponse>(
-    `/defi/v3/token/market-data?address=${address}&limit=5&sort_by=liquidity&sort_type=desc`
-  )
+  try {
+    return await get<TokenMarketsResponse>(
+      `/defi/v3/token/market-data?address=${address}&limit=5&sort_by=liquidity&sort_type=desc`
+    )
+  } catch {
+    return { items: [], total: 0 }
+  }
 }
