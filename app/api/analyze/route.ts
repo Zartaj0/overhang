@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
 
     // ── Phase 1b: Market data (4 calls) — staggered to avoid 429 ─────────────
     const [trades, ohlcv, exitLiq, markets] = await Promise.all([
-      getTokenTrades(address, 100),
+      getTokenTrades(address, 50),
       getOHLCV(address),
       getExitLiquidity(address),
       getTokenMarkets(address),

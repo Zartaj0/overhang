@@ -153,7 +153,7 @@ function normalizeTrade(t: RawTrade): Trade {
            owner: t.owner, side: t.side, volumeUsd: volUsd }
 }
 
-export async function getTokenTrades(address: string, limit = 100): Promise<TradeList> {
+export async function getTokenTrades(address: string, limit = 50): Promise<TradeList> {
   try {
     const raw = await get<{ items: RawTrade[]; total: number }>(
       `/defi/txs/token?address=${address}&limit=${limit}&sort_type=desc`
