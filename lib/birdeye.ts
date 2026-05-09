@@ -44,7 +44,11 @@ export interface TokenOverview {
 }
 
 export async function getTokenOverview(address: string): Promise<TokenOverview> {
-  return get<TokenOverview>(`/defi/token_overview?address=${address}`)
+  const raw = await get<Record<string, unknown>>(`/defi/token_overview?address=${address}`)
+  return {
+    ...raw,
+    volume24h: (raw.v24hUSD as number) ?? (raw.volume24h as number) ?? 0,
+  } as TokenOverview
 }
 
 // ─── 2. Token Security ───────────────────────────────────────────────────────
@@ -130,11 +134,31 @@ export interface TradeList {
   total: number
 }
 
+interface RawTrade {
+  blockUnixTime: number
+  source: string
+  txHash: string
+  owner: string
+  side: 'buy' | 'sell'
+  volumeUsd?: number
+  quote?: { uiAmount?: number; price?: number }
+  base?: { uiAmount?: number; price?: number }
+}
+
+function normalizeTrade(t: RawTrade): Trade {
+  const fromQuote = (t.quote?.uiAmount ?? 0) * (t.quote?.price ?? 0)
+  const fromBase  = (t.base?.uiAmount ?? 0) * (t.base?.price ?? 0)
+  const volUsd = t.volumeUsd ?? (fromQuote || fromBase || 0)
+  return { blockUnixTime: t.blockUnixTime, source: t.source, txHash: t.txHash,
+           owner: t.owner, side: t.side, volumeUsd: volUsd }
+}
+
 export async function getTokenTrades(address: string, limit = 100): Promise<TradeList> {
   try {
-    return await get<TradeList>(
+    const raw = await get<{ items: RawTrade[]; total: number }>(
       `/defi/txs/token?address=${address}&limit=${limit}&sort_type=desc`
     )
+    return { items: (raw.items ?? []).map(normalizeTrade), total: raw.total ?? 0 }
   } catch {
     return { items: [], total: 0 }
   }

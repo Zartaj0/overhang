@@ -237,7 +237,7 @@ export function computeOverhang(
   const buyVol    = recentTrades.filter(t => t.side === 'buy').reduce((s,t) => s+(t.volumeUsd||0), 0)
   const sellVol   = recentTrades.filter(t => t.side === 'sell').reduce((s,t) => s+(t.volumeUsd||0), 0)
   const totalVol1h = buyVol + sellVol
-  const sellVolRatio = totalVol1h > 0 ? sellVol / totalVol1h : 0.5
+  const sellVolRatio = totalVol1h > 0 ? sellVol / totalVol1h : 0
 
   let pressScore = 0
   if (sellVolRatio < 0.30)      pressScore = 0
